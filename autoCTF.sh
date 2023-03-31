@@ -12,11 +12,10 @@ BOLD="\e[1m"
 RED="\e[31m"
 
 function welcome_msg() {
-    printf $BOLD$GREEN
+    printf "$BOLD$GREEN"
     figlet -c -t "WELCOME BACK $USER, LET'S DO SOME HACKING!"
-    printf $DEFAULT
+    printf "$DEFAULT"
 }
-
 
 function init() {
     check_connection
@@ -26,49 +25,54 @@ function init() {
     if [ -d "${DIR}${BOX}" ]; then
         echo -e "$RED$BOLD [-] Failed to make $BOX directory. $BOX directory already exists.\n$DEFAULT"
         exit 1
-
-        elif  [ -z $IP ]; then
+    elif [ -z $IP ]; then
         echo -e "$RED$BOLD [-] Error, IP cannot Be Empty$DEFAULT"
         exit 1
-
     else
-        mkdir ${DIR}${BOX}
+        mkdir "${DIR}${BOX}"
         echo -e "$GREEN$BOLD [+] Successfully created the ${BOX} directory$DEFAULT"
+        update_hosts
         scan_host
     fi
 }
 
 function check_connection() {
-
     echo -e "$BLUE$BOLD [!] Checking VPN Connection ...\n $DEFAULT"
 
-    ip a show tun0 >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-
-    echo -e "$RED$BOLD [-] Please Connect To openVPN \n$DEFAULT"
-
-    exit 1
-
+    if ip a show tun0 >/dev/null 2>&1; then
+        return
+    else
+        echo -e "$RED$BOLD [-] Please Connect To openVPN \n$DEFAULT"
+        exit 1
     fi
 }
 
+# update /etc/hosts
+function update_hosts() {
+    # if the website redirects to a dns fetch that dns and update etc hosts otherwise change it to box name
+    if curl "$IP" | grep http | cut -d "/" -f 3 >/dev/null; then
+        echo "$IP $(curl "$IP" | grep http | cut -d "/" -f 3)" | sudo tee -a /etc/hosts
+    else
+        echo "$IP $BOX.htb" | sudo tee -a /etc/hosts
+    fi
+
+    firefox "$(tail -n 1 /etc/hosts | cut -d " " -f 2)" &
+}
+
 function scan_host() {
-    
-        echo -e "$BLUE$BOLD [!] Scanning host....$DEFAULT"
-        # Light Scan
-        nmap -sV -sC -vvv $IP -o "${DIR}${BOX}/scan"
-        
-        echo -e "$GREEN$BOLD [+] $IP  has been scanned successfully and output file was saved to ${DIR}${BOX}/scan directory.$DEFAULT"
+    echo -e "$BLUE$BOLD [!] Scanning host....$DEFAULT"
+    # Light Scan
+    nmap -sV -sC -vvv "$IP" -o "${DIR}${BOX}/scan"
 
-        # deep scan
-        nmap $IP -p- -o "${DIR}${BOX}/deep-scan" > /dev/null &
+    echo -e "$GREEN$BOLD [+] $IP has been scanned successfully and output file was saved to ${DIR}${BOX}/scan directory.$DEFAULT"
 
-        # Move to box directory
-        cd ${DIR}${BOX}
-        $SHELL
+    # deep scan
+    nmap "$IP" -p- -o "${DIR}${BOX}/deep-scan" >/dev/null &
 
+    # Move to box directory
+    cd "${DIR}${BOX}"
+    "$SHELL"
 }
 
 welcome_msg
 init
-
