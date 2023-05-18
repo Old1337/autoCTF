@@ -32,8 +32,8 @@ function init() {
         mkdir "${DIR}${BOX}"
         echo -e "$GREEN$BOLD [+] Successfully created the ${BOX} directory$DEFAULT"
         update_hosts
-        scan_host
         copy_priv_esc_files
+        scan_host
     fi
 }
 
@@ -53,7 +53,7 @@ function check_connection() {
 function update_hosts() {
     # if the website redirects to a dns fetch that dns and update etc hosts otherwise change it to box name
     if curl -s "$IP" | grep http | cut -d "/" -f 3 >/dev/null; then
-        echo "$IP $(curl "$IP" | grep http | cut -d "/" -f 3)" | sudo tee -a /etc/hosts
+        echo "$IP $(curl -s "$IP" | grep http | cut -d "/" -f 3)" | sudo tee -a /etc/hosts
     else
         echo "$IP $BOX.htb" | sudo tee -a /etc/hosts
     fi
