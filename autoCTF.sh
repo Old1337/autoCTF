@@ -33,8 +33,10 @@ function init() {
         echo -e "$GREEN$BOLD [+] Successfully created the ${BOX} directory$DEFAULT"
         update_hosts
         scan_host
+        copy_priv_esc_files
     fi
 }
+
 
 function check_connection() {
     echo -e "$BLUE$BOLD [!] Checking VPN Connection ...\n $DEFAULT"
@@ -42,7 +44,7 @@ function check_connection() {
     if ip a show tun0 >/dev/null 2>&1; then
         return
     else
-        echo -e "$RED$BOLD [-] Please Connect To openVPN \n$DEFAULT"
+        echo -e "$RED$BOLD [-] Please Connect To Your VPN \n$DEFAULT"
         exit 1
     fi
 }
@@ -50,13 +52,14 @@ function check_connection() {
 # update /etc/hosts
 function update_hosts() {
     # if the website redirects to a dns fetch that dns and update etc hosts otherwise change it to box name
-    if curl "$IP" | grep http | cut -d "/" -f 3 >/dev/null; then
+    if curl -s "$IP" | grep http | cut -d "/" -f 3 >/dev/null; then
         echo "$IP $(curl "$IP" | grep http | cut -d "/" -f 3)" | sudo tee -a /etc/hosts
     else
         echo "$IP $BOX.htb" | sudo tee -a /etc/hosts
     fi
 
     firefox "$(tail -n 1 /etc/hosts | cut -d " " -f 2)" &
+    burpsuite &
 }
 
 function scan_host() {
@@ -74,5 +77,13 @@ function scan_host() {
     "$SHELL"
 }
 
+function copy_priv_esc_files() {
+    echo -e "$BLUE$BOLD [!] Copying Privilege Escalation Files.... $DEFAULT"
+
+    cp /opt/pen/privilege/linpeas.sh /opt/pen/privilege/pspy64 "${DIR}${BOX}"
+
+    echo -e "$GREEN$BOLD [+] Successfully Copied the Priv Esc Files$DEFAULT"
+
+}
 welcome_msg
 init
