@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIR=~/CTF/Boxes/ # Root DIR
-BOX=$2
+BOX=$1
 IP=$2
 
 # colors
