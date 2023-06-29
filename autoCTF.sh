@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIR=~/CTF/Boxes/ # Root DIR
-BOX=${1^}
+BOX=$2
 IP=$2
 
 # colors
@@ -79,9 +79,7 @@ function scan_host() {
 
 function copy_priv_esc_files() {
     echo -e "$BLUE$BOLD [!] Copying Privilege Escalation Files.... $DEFAULT"
-
-    cp /opt/pen/privilege/linpeas.sh /opt/pen/privilege/pspy64 "${DIR}${BOX}"
-
+    cp /usr/local/bin/linpeas /usr/local/bin/pspy64 "${DIR}${BOX}"
     echo -e "$GREEN$BOLD [+] Successfully Copied the Priv Esc Files$DEFAULT"
 
 }
